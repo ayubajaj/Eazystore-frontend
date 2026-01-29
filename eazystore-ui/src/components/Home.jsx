@@ -2,6 +2,7 @@ import PageHeading from "./PageHeading";
 import ProductListings from "./ProductListings";
 import apiClient from "../api/apiClient";
 import { useLoaderData } from "react-router-dom";
+const from=sessionStorage.getItem("redirectpath")||"/home";
 
 // Hooks
 export default function Home() {
