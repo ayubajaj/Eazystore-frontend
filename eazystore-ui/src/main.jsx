@@ -29,6 +29,7 @@ import Message from "./components/admin/Message.jsx";
 import AdminOrders from "./components/admin/AdminOrders.jsx";
 import Register from "./components/Register.jsx";
 import { registerAction } from "./components/Register.jsx";
+import { profileLoader, profileAction } from "./components/Profile.jsx";
 
 
 const routeDefinitions = createRoutesFromElements(
@@ -44,7 +45,10 @@ const routeDefinitions = createRoutesFromElements(
    
     <Route element={<ProtectedRoute />} >
      <Route path="/checkout" element={<CheckoutForm />} />
-      <Route path="/profile" element={<Profile/>} />
+      <Route path="/profile" element={<Profile/>} loader={profileLoader} action={profileAction}
+      shouldRevalidate={({actionResult})=>{
+        return !actionResult?.success;
+      }}/>
       <Route path="/orders" element={<Orders/>} />
       <Route path="/admin/messages" element={<Message/>} />
       <Route path="/admin/orders" element={<AdminOrders/>} />

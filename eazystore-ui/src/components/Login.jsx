@@ -1,27 +1,36 @@
 import React, { useEffect } from "react";
 import PageTitle from "./PageTitle";
-import { Link, Form, useActionData, useNavigate, useNavigation } from "react-router-dom";
-import { toast } from "react-toastify";
+import {
+  Link,
+  Form,
+  useActionData,
+  useNavigation,
+  useNavigate,
+} from "react-router-dom";
 import apiClient from "../api/apiClient";
-import { useAuth } from "../store/auth-context.jsx";
+import { toast } from "react-toastify";
+import { useAuth } from "../store/auth-context";
 
 export default function Login() {
   const actionData = useActionData();
-  const navigate = useNavigate();
   const navigation = useNavigation();
-  const {loginSuccess}=useAuth();
   const isSubmitting = navigation.state === "submitting";
- 
-  const from=sessionStorage.getItem("redirectpath")||"/home";
+  const navigate = useNavigate();
+  const { loginSuccess } = useAuth();
+  const from = sessionStorage.getItem("redirectPath") || "/home";
+
   useEffect(() => {
     if (actionData?.success) {
       loginSuccess(actionData.jwtToken, actionData.user);
-      sessionStorage.removeItem("redirectpath");
-      navigate(from);
+      sessionStorage.removeItem("redirectPath");
+      setTimeout(() => {
+        navigate(from);
+      }, 100);
     } else if (actionData?.errors) {
-      toast.error(actionData.errors.message || "Login Failed.");
+      toast.error(actionData.errors.message || "Login failed.");
     }
-  }, [actionData, navigate]);
+  }, [actionData]);
+
   const labelStyle =
     "block text-lg font-semibold text-primary dark:text-light mb-2";
   const textFieldStyle =
@@ -43,7 +52,7 @@ export default function Login() {
               type="text"
               name="username"
               placeholder="Your Username"
-                 autoComplete="username"
+              autoComplete="username"
               required
               className={textFieldStyle}
             />
@@ -74,8 +83,7 @@ export default function Login() {
               disabled={isSubmitting}
               className="w-full px-6 py-2 text-white dark:text-black text-xl rounded-md transition duration-200 bg-primary dark:bg-light hover:bg-dark dark:hover:bg-lighter"
             >
-
-              {isSubmitting?"Authenticating...":"Login"}
+              {isSubmitting ? "Authenticating..." : "Login"}
             </button>
           </div>
         </Form>
@@ -94,17 +102,21 @@ export default function Login() {
     </div>
   );
 }
+
 export async function loginAction({ request }) {
   const data = await request.formData();
-  const formData = {
+
+  const loginData = {
     username: data.get("username"),
     password: data.get("password"),
   };
 
   try {
-    const response = await apiClient.post("/auth/login", formData);
-    const { message, user, jwtToken } = response.data;
-    return { success: true, message, user, jwtToken };
+    const response = await apiClient.post("/auth/login", loginData);
+    console.log(response.data);
+    const { message, userDto, jwtToken } = response.data;
+    // console.log(user);
+    return { success: true, message, user:userDto, jwtToken };
   } catch (error) {
     if (error.response?.status === 401) {
       return {
@@ -112,12 +124,11 @@ export async function loginAction({ request }) {
         errors: { message: "Invalid username or password" },
       };
     }
-
     throw new Response(
-      error.response?.data?.message || error.message || "Failed to login. Please try again.",
-      {
-        status: error.response?.status || 500,
-      }
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to login. Please try again.",
+      { status: error.response?.status || 500 }
     );
   }
 }
